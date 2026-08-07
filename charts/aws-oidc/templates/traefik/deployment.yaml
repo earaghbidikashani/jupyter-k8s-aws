@@ -33,6 +33,10 @@ spec:
       serviceAccountName: jupyter-k8s-traefik
       terminationGracePeriodSeconds: 60
       hostNetwork: false
+      {{- if .Values.traefik.affinity }}
+      affinity:
+        {{- toYaml .Values.traefik.affinity | nindent 8 }}
+      {{- else }}
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -45,6 +49,11 @@ spec:
                   values:
                   - traefik
               topologyKey: kubernetes.io/hostname
+      {{- end }}
+      {{- with .Values.traefik.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.traefik.nodeSelector | default .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -132,6 +141,19 @@ spec:
           - "--entrypoints.websecure.forwardedHeaders.insecure=true"
         {{- if .Values.traefik.debug }}
           - "--log.level=DEBUG"
+        {{- end }}
+        {{- if .Values.traefik.accessLog.enabled }}
+          - "--accesslog=true"
+          - "--accesslog.format=json"
+          - "--accesslog.fields.headers.names.Authorization=redact"
+          # Drop query strings — the /oauth2/callback and /dex routes carry OAuth
+          # `code`/`state` params that must not land in CloudWatch. Traefik only
+          # supports bulk keep/drop for query params (no per-param redact). To
+          # keep them for debugging, override via traefik.extraArgs.
+          - "--accesslog.fields.queryParameters.defaultMode=drop"
+        {{- end }}
+        {{- range .Values.traefik.extraArgs }}
+          - {{ . | quote }}
         {{- end }}
       volumes:
         - name: tmp
