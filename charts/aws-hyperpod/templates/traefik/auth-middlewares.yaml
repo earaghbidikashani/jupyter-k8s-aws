@@ -32,6 +32,7 @@ spec:
     addAuthCookiesToResponse:
       - "{{ $.Values.clusterWebUI.auth.cookieName }}"
     authRequestHeaders:
+      - "Authorization"
       - "Cookie"
       - "X-Forwarded-Uri"
       - "X-Forwarded-Host"

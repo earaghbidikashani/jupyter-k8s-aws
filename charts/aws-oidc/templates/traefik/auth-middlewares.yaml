@@ -115,6 +115,7 @@ spec:
     addAuthCookiesToResponse:
       - "{{ $.Values.authmiddleware.cookieName }}"
     authRequestHeaders:
+      - "Authorization"
       - "Cookie"
       - "X-Forwarded-Uri"
       - "X-Forwarded-Host"

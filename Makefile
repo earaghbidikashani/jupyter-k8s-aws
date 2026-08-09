@@ -183,7 +183,8 @@ helm-test-aws-oidc: ## Render and test aws-oidc chart
 		--set githubRbac.orgs[0].teams[0]=ace-devs \
 		--set oauth2Proxy.cookieSecret=$(OAUTH2P_COOKIE_SECRET) \
 		--set authmiddleware.enableBearerAuth=true \
-		--set accessStrategy.createBearer=true
+		--set accessStrategy.createBearer=true \
+		--set accessStrategy.createWebSocket=true
 	rm -rf /tmp/helm-test-chart
 	go test ./test/helm/aws-oidc -v
 

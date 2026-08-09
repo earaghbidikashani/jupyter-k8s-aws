@@ -177,6 +177,37 @@ accessStrategy:
   createOAuth: true
   # Create the bearer token access strategy (requires authmiddleware.enableBearerAuth)
   createBearer: false
+  # Create the WebSocket access strategy for remote IDE access over WebSocket.
+  # Requires authmiddleware.enableBearerAuth: the WebSocket upgrade is authenticated
+  # by the bearer-auth ForwardAuth handler using the JWT from the Authorization header.
+  createWebSocket: false
+  # WebSocket remote access (ws-proxy sidecar) settings
+  webSocket:
+    # Container and port name for the proxy sidecar. The port name is what
+    # podModifications.exposedPorts references to publish it on the workspace Service.
+    containerName: ws-proxy
+    portName: ws-proxy
+    # Port the proxy listens on for WebSocket upgrades
+    port: 8080
+    # TCP target the proxy bridges to (the remote access server in the workspace container)
+    targetHost: "127.0.0.1"
+    targetPort: 2222
+    # Maximum lifetime of a single WebSocket session
+    maxSessionDuration: "12h"
+    # Maximum concurrent WebSocket connections per workspace
+    maxConnections: 10
+    image:
+      imagePullPolicy: Always
+      repository: ghcr.io/jupyter-infra
+      imageName: workspace-websocket-proxy
+      imageTag: v0.1.0-rc.1
+    resources:
+      limits:
+        cpu: 200m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
   # Create per-workspace NetworkPolicy as an access resource.
   # Set to false when namespace-level network policies are managed externally
   # (e.g. by the deployment template) or when large workspace counts make
