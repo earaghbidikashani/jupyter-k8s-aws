@@ -127,6 +127,15 @@ dex:
   certCheck:
     # Maximum time to wait for TLS certificate to be ready
     timeout_seconds: 300
+  # startupProbe config gating readiness on the first signing key.
+  # The probe polls /dex/keys until a "kid" appears; until then the pod stays
+  # NotReady so the EKS OIDC authenticator never caches an empty JWKS.
+  keyCheck:
+    # How often the startupProbe checks /dex/keys for a signing key
+    period_seconds: 3
+    # Maximum time to wait for the first signing key (budget = failureThreshold *
+    # period_seconds). Defaults align with the certCheck budget.
+    timeout_seconds: 180
 
   # Node selector for dex pods (overrides chart-level nodeSelector)
   nodeSelector: {}
@@ -333,13 +342,23 @@ webApp:
       cpu: 100m
       memory: 128Mi
   # Session cookie configuration for auth fast path
-  # Timing values (cookieMaxAge, maxLifetime, nearExpiryThreshold) are
-  # automatically derived from oauth2Proxy.cookieExpire
+  # maxLifetime (absolute cap) and nearExpiryThreshold stay derived from
+  # oauth2Proxy.cookieExpire; cookieMaxAge is set explicitly below.
   session:
     cookieName: "workspace_console_session"
     cookiePath: "/api/"
     secretName: "web-app-session-secret"
-    numberOfKeys: 3
+    # Idle timeout for the fast-path cookie. SLIDING: the cookie is re-signed with
+    # the newest key and its Max-Age re-Set on every authenticated request, so only
+    # inactivity counts. Keep short and below the signing-key retention (see
+    # numberOfKeys) so the browser stops sending the cookie before its key rotates
+    # out. An idle-beyond-timeout return then falls to the OAuth2 Proxy auth-path
+    # and re-auths transparently. Must be < the session max lifetime.
+    cookieMaxAge: "1h"
+    # Session-signing keys retained by web-app-session-rotator. Retention
+    # (numberOfKeys * rotationInterval) MUST be >= cookieMaxAge + rotationInterval
+    # since cookies always carry the newest key.
+    numberOfKeys: 6
     newKeyUseDelaySecs: 5
   # Kubectl access page — lets users download a kubeconfig setup script.
   # clusterName gates the feature: set it to enable, leave empty to disable.
