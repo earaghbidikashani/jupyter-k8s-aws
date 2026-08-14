@@ -7,11 +7,6 @@ metadata:
 spec:
   displayName: JupyterLab Routing Strategy with WebSocket remote access
   createConnectionHandler: "k8s-native"
-  createConnectionHandlerMap:
-    ssh-over-websocket: "k8s-native"
-    vscode-remote: "k8s-native"
-    kiro-remote: "k8s-native"
-    cursor-remote: "k8s-native"
   accessResourceTemplates:
     {{- if .Values.accessStrategy.createNetworkPolicy }}
     - kind: NetworkPolicy

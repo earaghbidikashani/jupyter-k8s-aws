@@ -334,7 +334,7 @@ var _ = Describe("Access Strategy", func() {
 
 		It("should render the websocket access strategy", func() {
 			Expect(content).To(ContainSubstring("name: websocket-access-strategy"))
-			Expect(content).To(ContainSubstring("ssh-over-websocket: \"k8s-native\""))
+			Expect(content).To(ContainSubstring("createConnectionHandler: \"k8s-native\""))
 		})
 
 		It("should route the /ssh-ws sub-path to the proxy port without matching all WebSocket traffic", func() {
