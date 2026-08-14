@@ -116,6 +116,14 @@ spec:
         - name: {{ .Values.accessStrategy.webSocket.containerName }}
           image: "{{ .Values.accessStrategy.webSocket.image.repository }}/{{ .Values.accessStrategy.webSocket.image.imageName }}:{{ .Values.accessStrategy.webSocket.image.imageTag }}"
           imagePullPolicy: {{ .Values.accessStrategy.webSocket.image.imagePullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            capabilities:
+              drop:
+              - ALL
           ports:
             - name: {{ .Values.accessStrategy.webSocket.portName }}
               containerPort: {{ .Values.accessStrategy.webSocket.port }}

@@ -357,6 +357,12 @@ var _ = Describe("Access Strategy", func() {
 			Expect(content).To(ContainSubstring("containerPort: 8080"))
 			Expect(content).To(ContainSubstring("exposedPorts:"))
 		})
+
+		It("should harden the proxy sidecar securityContext", func() {
+			Expect(content).To(ContainSubstring("runAsNonRoot: true"))
+			Expect(content).To(ContainSubstring("allowPrivilegeEscalation: false"))
+			Expect(content).To(ContainSubstring("readOnlyRootFilesystem: true"))
+		})
 	})
 
 	Context("websocket validation", func() {
