@@ -300,7 +300,7 @@ var _ = Describe("Access Strategy", func() {
 			out, err := exec.Command("helm", "dependency", "build", chartDir).CombinedOutput()
 			Expect(err).NotTo(HaveOccurred(), "helm dependency build failed: %s", string(out))
 
-			args := append([]string{helmTemplateCmd, helmReleaseName, chartDir, "--output-dir", outputDir},
+			args := append([]string{helmTemplateCmd, helmReleaseName, chartDir, helmOutputDirFlag, outputDir},
 				minimalOIDCArgs[:]...,
 			)
 			args = append(args,
@@ -311,6 +311,74 @@ var _ = Describe("Access Strategy", func() {
 			Expect(err).To(HaveOccurred(), "helm template should have failed")
 			Expect(string(out)).To(ContainSubstring(
 				"accessStrategy.createBearer requires authmiddleware.enableBearerAuth"))
+		})
+	})
+
+	Context("with websocket enabled", func() {
+		var content string
+
+		BeforeEach(func() {
+			outputDir := GinkgoT().TempDir()
+			chartDir := GinkgoT().TempDir()
+			copyDir(filepath.Join(rootDir, "charts/aws-oidc"), chartDir)
+			args := append(minimalOIDCArgs,
+				helmSetFlag, "accessStrategy.createWebSocket=true",
+				helmSetFlag, "authmiddleware.enableBearerAuth=true",
+			)
+			helmTemplate(chartDir, outputDir, args...)
+			data, err := os.ReadFile(filepath.Join(outputDir,
+				"jupyter-k8s-aws-oidc/templates", websocketStrategyFile))
+			Expect(err).NotTo(HaveOccurred())
+			content = string(data)
+		})
+
+		It("should render the websocket access strategy", func() {
+			Expect(content).To(ContainSubstring("name: websocket-access-strategy"))
+			Expect(content).To(ContainSubstring("ssh-over-websocket: \"k8s-native\""))
+		})
+
+		It("should route the /ssh-ws sub-path to the proxy port without matching all WebSocket traffic", func() {
+			Expect(content).To(ContainSubstring("/ssh-ws`)"),
+				"the proxy must own a dedicated sub-path, not match every upgrade")
+			Expect(content).NotTo(ContainSubstring("HeaderRegexp"),
+				"matching the Upgrade header would capture JupyterLab's own kernel/terminal WebSockets")
+			Expect(content).To(ContainSubstring("ssh-ws/bearer-auth"),
+				"bearerAuthURLTemplate must resolve the client to the /ssh-ws route")
+		})
+
+		It("should open both the application port and the proxy port in the NetworkPolicy", func() {
+			Expect(content).To(ContainSubstring("kind: NetworkPolicy"))
+			Expect(content).To(ContainSubstring("port: 8888"))
+			Expect(content).To(ContainSubstring("port: 8080"))
+		})
+
+		It("should inject the proxy sidecar and expose its port on the Service", func() {
+			Expect(content).To(ContainSubstring("name: ws-proxy"))
+			Expect(content).To(ContainSubstring("containerPort: 8080"))
+			Expect(content).To(ContainSubstring("exposedPorts:"))
+		})
+	})
+
+	Context("websocket validation", func() {
+		It("should fail when createWebSocket is true but enableBearerAuth is false", func() {
+			outputDir := GinkgoT().TempDir()
+			chartDir := GinkgoT().TempDir()
+			copyDir(filepath.Join(rootDir, "charts/aws-oidc"), chartDir)
+
+			out, err := exec.Command("helm", "dependency", "build", chartDir).CombinedOutput()
+			Expect(err).NotTo(HaveOccurred(), "helm dependency build failed: %s", string(out))
+
+			args := append([]string{helmTemplateCmd, helmReleaseName, chartDir, helmOutputDirFlag, outputDir},
+				minimalOIDCArgs[:]...,
+			)
+			args = append(args,
+				helmSetFlag, "accessStrategy.createWebSocket=true",
+				helmSetFlag, "authmiddleware.enableBearerAuth=false",
+			)
+			out, err = exec.Command("helm", args...).CombinedOutput()
+			Expect(err).To(HaveOccurred(), "helm template should have failed")
+			Expect(string(out)).To(ContainSubstring(
+				"accessStrategy.createWebSocket requires authmiddleware.enableBearerAuth"))
 		})
 	})
 })

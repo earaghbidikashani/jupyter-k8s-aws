@@ -38,6 +38,11 @@
 {{- fail "accessStrategy.createBearer requires authmiddleware.enableBearerAuth to be true" }}
 {{- end }}
 
+{{/* Validate: websocket access strategy requires enableBearerAuth */}}
+{{- if and .Values.accessStrategy.createWebSocket (not .Values.authmiddleware.enableBearerAuth) }}
+{{- fail "accessStrategy.createWebSocket requires authmiddleware.enableBearerAuth to be true" }}
+{{- end }}
+
 {{/* Validate: additionalNamespaces must not include the default workspace namespace (it is added automatically) */}}
 {{- if has .Values.webApp.workspacesDefaultNamespace .Values.webApp.workspaceNamespaceSelection.additionalNamespaces }}
 {{- fail (printf "webApp.workspaceNamespaceSelection.additionalNamespaces must not contain the default workspace namespace %q — it is always included automatically" .Values.webApp.workspacesDefaultNamespace) }}
