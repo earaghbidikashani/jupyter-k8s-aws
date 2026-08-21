@@ -340,7 +340,7 @@ var _ = Describe("Access Strategy", func() {
 		It("should route the /ssh-ws sub-path to the proxy port without matching all WebSocket traffic", func() {
 			Expect(content).To(ContainSubstring("/ssh-ws`)"),
 				"the proxy must own a dedicated sub-path, not match every upgrade")
-			Expect(content).NotTo(ContainSubstring("HeaderRegexp"),
+			Expect(content).NotTo(ContainSubstring("Upgrade"),
 				"matching the Upgrade header would capture JupyterLab's own kernel/terminal WebSockets")
 			Expect(content).To(ContainSubstring("ssh-ws/bearer-auth"),
 				"bearerAuthURLTemplate must resolve the client to the /ssh-ws route")
