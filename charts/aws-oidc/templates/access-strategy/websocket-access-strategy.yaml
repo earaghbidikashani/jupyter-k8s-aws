@@ -156,7 +156,8 @@ spec:
             valueTemplate: "/workspaces/{{`{{ .Workspace.Namespace }}`}}/{{`{{ .Workspace.Name }}`}}/"
   applicationBasePathTemplate: "/workspaces/{{`{{ .Workspace.Namespace }}`}}/{{`{{ .Workspace.Name }}`}}/"
   accessURLTemplate: "https://{{ .Values.domain }}/workspaces/{{`{{ .Workspace.Namespace }}`}}/{{`{{ .Workspace.Name }}`}}/"
-  bearerAuthURLTemplate: "https://{{ .Values.domain }}/workspaces/{{`{{ .Workspace.Namespace }}`}}/{{`{{ .Workspace.Name }}`}}/ssh-ws/bearer-auth"
+  bearerAuthURLTemplate: "https://{{ .Values.domain }}/workspaces/{{`{{ .Workspace.Namespace }}`}}/{{`{{ .Workspace.Name }}`}}/bearer-auth"
+  webSocketURLTemplate: "https://{{ .Values.domain }}/workspaces/{{`{{ .Workspace.Namespace }}`}}/{{`{{ .Workspace.Name }}`}}/ssh-ws"
   accessStartupProbe:
     httpGet:
       urlTemplate: "https://{{ .Values.domain }}/workspaces/{{`{{ .Workspace.Namespace }}`}}/{{`{{ .Workspace.Name }}`}}/bearer-auth"

@@ -342,8 +342,12 @@ var _ = Describe("Access Strategy", func() {
 				"the proxy must own a dedicated sub-path, not match every upgrade")
 			Expect(content).NotTo(ContainSubstring("Upgrade"),
 				"matching the Upgrade header would capture JupyterLab's own kernel/terminal WebSockets")
-			Expect(content).To(ContainSubstring("ssh-ws/bearer-auth"),
-				"bearerAuthURLTemplate must resolve the client to the /ssh-ws route")
+			Expect(content).To(ContainSubstring(
+				"webSocketURLTemplate: \"https://test.example.com/workspaces/{{ .Workspace.Namespace }}/{{ .Workspace.Name }}/ssh-ws\""),
+				"webSocketURLTemplate must resolve the client to the /ssh-ws route")
+			Expect(content).To(ContainSubstring(
+				"bearerAuthURLTemplate: \"https://test.example.com/workspaces/{{ .Workspace.Namespace }}/{{ .Workspace.Name }}/bearer-auth\""),
+				"bearerAuthURLTemplate must resolve the browser web-UI to /bearer-auth")
 		})
 
 		It("should open both the application port and the proxy port in the NetworkPolicy", func() {
